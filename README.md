@@ -114,3 +114,4 @@ We are thrilled to welcome you to the PearlThoughts team! This internship is des
 We are excited to have you on board and look forward to seeing you grow and succeed during your time with us. 
 
 **Welcome to PearlThoughts—let's embark on this journey together!**
+# The-Config-Crew
