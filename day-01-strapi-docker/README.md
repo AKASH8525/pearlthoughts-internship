@@ -193,6 +193,7 @@ Explanation:
 ```bash
 docker ps
 ```
+<img width="1070" height="581" alt="image" src="https://github.com/user-attachments/assets/57c39f72-d6e5-439f-ba50-cfe2ef0a81fd" />
 
 ---
 
@@ -204,6 +205,8 @@ Once the container is running:
 * Admin Panel: [http://localhost:1337/admin](http://localhost:1337/admin)
 
 The admin panel loads successfully, confirming that Strapi is running inside Docker.
+
+<img width="1867" height="628" alt="image" src="https://github.com/user-attachments/assets/cfe2fe1d-5c26-44c2-8375-e7a951e4076c" />
 
 ---
 
