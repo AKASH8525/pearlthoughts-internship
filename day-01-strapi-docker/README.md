@@ -193,6 +193,8 @@ Explanation:
 ```bash
 docker ps
 ```
+<img width="1448" height="105" alt="image" src="https://github.com/user-attachments/assets/069a4d20-8704-43af-9ef8-782e5000e867" />
+
 <img width="1070" height="581" alt="image" src="https://github.com/user-attachments/assets/57c39f72-d6e5-439f-ba50-cfe2ef0a81fd" />
 
 ---
