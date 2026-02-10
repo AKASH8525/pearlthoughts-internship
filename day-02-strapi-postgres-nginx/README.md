@@ -99,6 +99,7 @@ docker network ls
 ```
 
 * *Success Criterion:* `strapi-net` appears in the driver list.
+<img width="431" height="149" alt="Screenshot 2026-02-10 115326" src="https://github.com/user-attachments/assets/924f3f6f-16b1-4362-84e0-3a2128d82976" />
 
 ---
 
@@ -267,12 +268,14 @@ docker network inspect strapi-net
 
 
 * *Expected Result:* All three containers (`postgres`, `strapi`, `nginx`) should be listed under the "Containers" section.
+<img width="816" height="741" alt="Screenshot 2026-02-10 115417" src="https://github.com/user-attachments/assets/6add4f24-6839-42b6-822a-693a269ca4fc" />
 
 
 2. **Access Application:**
 Open a web browser and navigate to:
 `http://localhost/admin`
 * *Expected Result:* The Strapi login page loads via Nginx on port 80.
+<img width="1886" height="738" alt="Screenshot 2026-02-10 115526" src="https://github.com/user-attachments/assets/60d30195-824d-4b01-9268-6c81cabdde79" />
 
 
 
