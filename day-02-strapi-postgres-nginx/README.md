@@ -288,3 +288,6 @@ This implementation fulfills all task requirements:
 * **Connectivity:** Strapi connects to PostgreSQL via environment variables.
 * **Proxy:** Nginx maps host port 80 to Strapi's internal port 1337.
 * **Isolation:** All components run exclusively on the user-defined network.
+
+
+BRANCH:akash-k-task
