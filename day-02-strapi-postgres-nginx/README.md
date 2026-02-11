@@ -426,27 +426,6 @@ http://localhost/admin
 
 ---
 
-# Stop the Application
-
-```
-docker compose down
-```
-
----
-
-# Improvements Over Manual Docker Setup
-
-* Centralized service definition
-* Single command deployment
-* Automatic network creation
-* Persistent database storage
-* Restart policies
-* Cleaner and scalable architecture
-
----
-
-
-
 ## Final Verification
 
 To ensure all requirements are met, perform the following checks:
