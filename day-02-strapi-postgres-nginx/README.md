@@ -12,249 +12,440 @@ The setup includes:
 * An **Nginx** container acting as a reverse proxy
 * A **user-defined Docker network** to enable container-to-container communication
 
+All services are managed using **Docker Compose**, allowing the entire stack to be deployed with a single command.
+
 The final system allows access to the Strapi Admin Dashboard via:
 `http://localhost/admin`
 
 All steps were executed on **Ubuntu 24.04 LTS (WSL2)**.
 
-## Architecture Overview
+Perfect 👍 Since you’ve now moved to **Docker Compose**, your README must:
 
-```text
-Client (Browser)
-      |
-      |  http://localhost (port 80)
-      v
-   Nginx (Reverse Proxy)
-      |
-      |  http://strapi:1337
-      v
-   Strapi Application
-      |
-      |  PostgreSQL protocol
-      v
-   PostgreSQL Database
-
-```
-
-All containers run on a single user-defined Docker network named `strapi-net`.
-
-## Approach
-
-The task was approached in a layered and incremental manner to ensure stability and easy debugging:
-
-1. **Networking first** – create a user-defined Docker network
-2. **Database layer** – run PostgreSQL with proper credentials
-3. **Application layer** – configure Strapi to use PostgreSQL
-4. **Reverse proxy layer** – expose Strapi using Nginx
-5. **Verification** – confirm end-to-end access via browser
-
-This approach mirrors real-world DevOps practices, where each layer is validated before moving to the next.
+* Explain the **architecture**
+* Explain **why Compose**
+* Explain the `docker-compose.yml` file **line-by-line**
+* Explain how to run it
+* Mention improvements over manual setup
 
 ---
 
-## Environment Details
+# Architecture
 
-* **OS:** Ubuntu 24.04 LTS (WSL2)
-* **Docker Engine:** Docker Desktop with WSL2 integration
-* **Images:** `postgres:15`, `node:20-alpine`, `nginx:alpine`
+```
+Browser
+   ↓
+Nginx (Port 80 exposed)
+   ↓
+Strapi (Internal Port 1337)
+   ↓
+PostgreSQL (Internal Port 5432)
+```
 
-## Folder Structure
+All containers communicate through a shared Docker network defined in Docker Compose.
 
-```text
+---
+
+# Project Structure
+
+```
 day-02-strapi-postgres-nginx/
+│
+├── docker-compose.yml
 ├── strapi-app/
-│   ├── Dockerfile             # Strapi image definition
-│   ├── .env                   # Environment variables
-│   ├── config/database.ts     # Database connection logic
-│   └── [Source Code]          # Strapi application source
+│   ├── Dockerfile
+│   ├── .env
+│   └── config/database.ts
+│
 ├── nginx/
-│   └── nginx.conf             # Nginx proxy configuration
-└── README.md                  # Documentation
-
+│   └── nginx.conf
+│
+└── README.md
 ```
 
 ---
 
-## Step 1: Create User-Defined Network
+# Docker Compose File Explanation (Line-by-Line)
 
-To fulfill the requirement of isolated container communication, we create a specific bridge network.
-
-**Command:**
-
-```bash
-docker network create strapi-net
-
-```
-
-**Explanation:**
-
-* `docker network create`: Initializes a new network driver.
-* `strapi-net`: **(Requirement)** The specific name assigned to this network. All subsequent containers must attach to this network to resolve each other by name.
-
-**Verification:**
-
-```bash
-docker network ls
-
-```
-
-* *Success Criterion:* `strapi-net` appears in the driver list.
-<img width="431" height="149" alt="Screenshot 2026-02-10 115326" src="https://github.com/user-attachments/assets/924f3f6f-16b1-4362-84e0-3a2128d82976" />
+File: `docker-compose.yml`
 
 ---
 
-## Step 2: PostgreSQL Container Setup
+## Version
 
-We deploy the database with the required environment variables for authentication.
-
-**Command:**
-
-```bash
-docker run -d --name postgres --network strapi-net \
-  -e POSTGRES_DB=strapidb \
-  -e POSTGRES_USER=strapiuser \
-  -e POSTGRES_PASSWORD=strapipassword \
-  postgres:15
-
+```yaml
+version: "3.8"
 ```
 
-**Line-by-Line Explanation:**
-
-* `docker run -d`: Starts the container in detached mode (background).
-* `--name postgres`: Assigns the hostname `postgres`. This is crucial for the Strapi container to locate the database.
-* `--network strapi-net`: **(Requirement)** Attaches the database to the user-defined network.
-* `-e POSTGRES_DB=strapidb`: **(Requirement)** Sets the default database name.
-* `-e POSTGRES_USER=strapiuser`: **(Requirement)** Sets the database username.
-* `-e POSTGRES_PASSWORD=strapipassword`: **(Requirement)** Sets the database password.
-* `postgres:15`: Uses the stable PostgreSQL version 15 image.
+Specifies the Docker Compose file format version.
 
 ---
 
-## Step 3: Strapi Application Setup
+## Services Section
 
-### 3.1 Dockerfile Configuration (`strapi-app/Dockerfile`)
+```yaml
+services:
+```
 
-This file defines the build process for the Strapi application.
+Defines all containers used in this setup.
+
+---
+
+## PostgreSQL Service
+
+```yaml
+postgres:
+  image: postgres:15
+```
+
+Uses the official PostgreSQL version 15 image.
+
+---
+
+```yaml
+  container_name: postgres
+```
+
+Names the container `postgres`.
+This name is used by Strapi to connect to the database.
+
+---
+
+```yaml
+  restart: always
+```
+
+Automatically restarts the container if it crashes.
+
+---
+
+```yaml
+  environment:
+    POSTGRES_DB: strapidb
+    POSTGRES_USER: strapiuser
+    POSTGRES_PASSWORD: strapipassword
+```
+
+Sets:
+
+* Database name
+* Username
+* Password
+
+These must match the `.env` configuration in Strapi.
+
+---
+
+```yaml
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+```
+
+Creates a named volume to persist database data.
+Without this, data would be lost if the container is removed.
+
+---
+
+```yaml
+  networks:
+    - strapi-net
+```
+
+Connects PostgreSQL to the shared Docker network.
+
+---
+
+## Strapi Service
+
+```yaml
+strapi:
+  build:
+    context: ./strapi-app
+```
+
+Builds the Strapi image using the Dockerfile inside `strapi-app`.
+
+---
+
+```yaml
+  container_name: strapi
+```
+
+Names the container `strapi`.
+
+---
+
+```yaml
+  restart: always
+```
+
+Ensures Strapi restarts automatically if it crashes.
+
+---
+
+```yaml
+  env_file:
+    - ./strapi-app/.env
+```
+
+Loads environment variables from `.env`.
+
+This includes:
+
+* Database host
+* Database credentials
+* JWT secrets
+* App keys
+
+---
+
+```yaml
+  depends_on:
+    - postgres
+```
+
+Ensures PostgreSQL starts before Strapi.
+
+---
+
+```yaml
+  networks:
+    - strapi-net
+```
+
+Connects Strapi to the same Docker network.
+
+---
+
+## Nginx Service
+
+```yaml
+nginx:
+  image: nginx:alpine
+```
+
+Uses lightweight Alpine-based Nginx image.
+
+---
+
+```yaml
+  container_name: nginx
+```
+
+Names the container `nginx`.
+
+---
+
+```yaml
+  restart: always
+```
+
+Automatically restarts Nginx if it crashes.
+
+---
+
+```yaml
+  ports:
+    - "80:80"
+```
+
+Maps:
+
+* Host port 80
+* To container port 80
+
+This allows access via `http://localhost`.
+
+---
+
+```yaml
+  volumes:
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+```
+
+Mounts custom Nginx configuration file into the container.
+
+`ro` means read-only.
+
+---
+
+```yaml
+  depends_on:
+    - strapi
+```
+
+Ensures Strapi starts before Nginx.
+
+---
+
+```yaml
+  networks:
+    - strapi-net
+```
+
+Connects Nginx to the shared Docker network.
+
+---
+
+## Volumes Section
+
+```yaml
+volumes:
+  postgres_data:
+```
+
+Defines a named volume for PostgreSQL data persistence.
+
+---
+
+## Networks Section
+
+```yaml
+networks:
+  strapi-net:
+    driver: bridge
+```
+
+Defines a user-defined bridge network for container communication.
+
+Docker automatically provides internal DNS resolution on this network.
+
+---
+
+# Dockerfile Explanation (Strapi)
+
+File: `strapi-app/Dockerfile`
+
+---
 
 ```dockerfile
 FROM node:20-alpine
-# Uses a lightweight Node.js 20 image based on Alpine Linux.
+```
 
+Uses Node.js 20 (required by Strapi v5).
+
+---
+
+```dockerfile
 WORKDIR /app
-# Sets the working directory inside the container to /app.
+```
 
+Sets working directory inside container.
+
+---
+
+```dockerfile
 COPY package.json package-lock.json* ./
-# Copies dependency manifests first to leverage Docker layer caching.
+```
 
+Copies dependency files first for caching.
+
+---
+
+```dockerfile
 RUN npm install
-# Installs all project dependencies defined in package.json.
+```
 
+Installs dependencies inside container.
+
+---
+
+```dockerfile
 COPY . .
-# Copies the rest of the application source code into the container.
+```
 
+Copies application source code.
+
+---
+
+```dockerfile
 RUN npm run build
-# Compiles the Strapi Admin Panel for production use.
+```
 
+Builds Strapi admin panel.
+
+---
+
+```dockerfile
 EXPOSE 1337
-# Documents that the container listens on port 1337 internally.
+```
 
+Documents internal Strapi port.
+
+---
+
+```
 CMD ["npm", "run", "start"]
-# Specifies the command to start the application when the container launches.
-
 ```
 
-### 3.2 Database Connection (`strapi-app/config/database.ts`)
-
-This configuration ensures Strapi connects using the variables defined in the requirements.
-
-```typescript
-export default ({ env }) => ({
-  connection: {
-    client: 'postgres',
-    connection: {
-      host: env('DATABASE_HOST', 'postgres'), // Connects to 'postgres' container
-      port: env.int('DATABASE_PORT', 5432),
-      database: env('DATABASE_NAME', 'strapidb'),
-      user: env('DATABASE_USERNAME', 'strapiuser'),
-      password: env('DATABASE_PASSWORD', 'strapipassword'),
-      ssl: env.bool('DATABASE_SSL', false),
-    },
-  },
-});
-
-```
-
-### 3.3 Build and Run Strapi
-
-**Build Command:**
-
-```bash
-cd strapi-app
-docker build -t strapi-postgres .
-
-```
-
-**Run Command:**
-
-```bash
-docker run -d --name strapi --network strapi-net --env-file .env strapi-postgres
-
-```
-
-**Explanation:**
-
-* `--name strapi`: key identifier used by Nginx.
-* `--network strapi-net`: **(Requirement)** Ensures Strapi is on the same network as PostgreSQL.
-* `--env-file .env`: Injects the `DATABASE_HOST`, `USER`, and `PASSWORD` variables into the container.
+Starts Strapi server.
 
 ---
 
-## Step 4: Nginx Reverse Proxy Setup
+# How to Run the Application
 
-### 4.1 Nginx Configuration (`nginx/nginx.conf`)
-
-This file configures the proxy to route traffic from localhost to the Strapi container.
-
-```nginx
-events {} 
-# Basic event processing block required by Nginx.
-
-http {
-    server {
-        listen 80; 
-        # Nginx listens for HTTP traffic on port 80 inside the container.
-
-        location / {
-            proxy_pass http://strapi:1337; 
-            # (Requirement) Proxies requests to the 'strapi' container on port 1337.
-            
-            proxy_set_header Host $host; 
-            # Forwards the original host header to the Strapi application.
-        }
-    }
-}
+## Step 1 – Navigate to Project Root
 
 ```
-
-### 4.2 Run Nginx Container
-
-**Command:**
-
-```bash
-docker run -d --name nginx --network strapi-net -p 80:80 \
-  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
-  nginx:alpine
-
+cd day-02-strapi-postgres-nginx
 ```
-
-**Line-by-Line Explanation:**
-
-* `--name nginx`: Names the container `nginx`.
-* `--network strapi-net`: **(Requirement)** Connects Nginx to the same network as Strapi and Postgres.
-* `-p 80:80`: **(Requirement)** Maps port 80 on the host machine to port 80 in the container.
-* `-v ...:/etc/nginx/nginx.conf:ro`: Mounts the custom configuration file into the container as read-only.
 
 ---
+
+## Step 2 – Build and Start All Services
+
+```
+docker compose up -d --build
+```
+
+This will:
+
+* Build Strapi image
+* Create network
+* Create volume
+* Start PostgreSQL
+* Start Strapi
+* Start Nginx
+
+---
+
+## Step 3 – Verify Running Containers
+
+```
+docker compose ps
+```
+
+---
+
+## Step 4 – Access Application
+
+Open:
+
+```
+http://localhost/admin
+```
+
+---
+
+# Stop the Application
+
+```
+docker compose down
+```
+
+---
+
+# Improvements Over Manual Docker Setup
+
+* Centralized service definition
+* Single command deployment
+* Automatic network creation
+* Persistent database storage
+* Restart policies
+* Cleaner and scalable architecture
+
+---
+
+
 
 ## Final Verification
 
