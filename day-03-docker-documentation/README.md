@@ -377,6 +377,7 @@ Docker:
 # 4. Docker Architecture (Detailed Internal Working)
 
 ---
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/d61e892e-d56e-4f7d-ae5a-8ac09c49c16e" />
 
 # High Level Docker Architecture
 
@@ -2242,15 +2243,6 @@ Now:
 ```
 docker volume prune
 ```
-
----
-
-# Common Mistakes
-
-1. Not using volume for database
-2. Storing uploads inside container without volume
-3. Deleting container and losing data
-
 ---
 
 # Internal Working
@@ -2278,5 +2270,475 @@ Containers are temporary.
 Volumes make data permanent.
 
 ---
+
+# 9. Docker Compose
+
+---
+
+# Why Docker Compose?
+
+## Problem Without Docker Compose
+
+If your application has:
+
+* Backend
+* Database
+* Redis
+* Nginx
+
+You must run manually:
+
+```
+docker network create
+docker volume create
+docker run db
+docker run backend
+docker run nginx
+```
+
+Problems:
+
+* Too many commands
+* Hard to manage
+* Hard to scale
+* Hard to restart properly
+* Not organized
+
+---
+
+# What is Docker Compose?
+
+Docker Compose is:
+
+* A tool to define and run multi-container applications
+* Uses a YAML file
+* Single command to manage everything
+
+Instead of many commands:
+
+```
+docker compose up
+```
+
+---
+
+# What File Does Compose Use?
+
+File name:
+
+```
+docker-compose.yml
+```
+
+Compose reads this file and creates:
+
+* Containers
+* Networks
+* Volumes
+* Environment variables
+* Port mappings
+
+---
+
+# Basic Structure of docker-compose.yml
+
+```
+version: '3'
+
+services:
+  service_name:
+    image:
+    build:
+    ports:
+    volumes:
+    environment:
+    networks:
+```
+
+---
+
+# Example (Backend + Database)
+
+```
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: myapp
+    ports:
+      - "1337:1337"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+```
+
+---
+
+# Explanation Section by Section
+
+---
+
+# version
+
+```
+version: '3.8'
+```
+
+Defines Compose file format version.
+
+---
+
+# services
+
+Main section where containers are defined.
+
+Each service = one container.
+
+---
+
+# build
+
+```
+build: .
+```
+
+Builds image from Dockerfile in current directory.
+
+Alternative:
+
+```
+build:
+  context: .
+  dockerfile: Dockerfile.dev
+```
+
+---
+
+# image
+
+```
+image: postgres:15
+```
+
+Uses existing image from Docker Hub.
+
+---
+
+# container_name
+
+```
+container_name: myapp
+```
+
+Sets fixed container name.
+
+---
+
+# ports
+
+```
+ports:
+  - "1337:1337"
+```
+
+Host port → Container port
+
+Format:
+
+```
+"host:container"
+```
+
+---
+
+# environment
+
+```
+environment:
+  - NODE_ENV=production
+```
+
+Sets environment variables inside container.
+
+Alternative syntax:
+
+```
+environment:
+  NODE_ENV: production
+```
+
+---
+
+# volumes
+
+```
+volumes:
+  - db-data:/var/lib/postgresql/data
+```
+
+Mounts named volume.
+
+Format:
+
+```
+volume_name:container_path
+```
+
+---
+
+# depends_on
+
+```
+depends_on:
+  - db
+```
+
+Ensures:
+
+* db container starts before app
+
+Important:
+
+* Does NOT wait for DB to be ready
+* Only ensures start order
+
+---
+
+# networks
+
+```
+networks:
+  - app-network
+```
+
+Connects service to custom network.
+
+---
+
+# Top-Level volumes
+
+```
+volumes:
+  db-data:
+```
+
+Creates named volume.
+
+---
+
+# Top-Level networks
+
+```
+networks:
+  app-network:
+```
+
+Creates custom network.
+
+---
+
+# Important Docker Compose Commands
+
+---
+
+## docker compose up
+
+Start services:
+
+```
+docker compose up
+```
+
+---
+
+## docker compose up -d
+
+Detached mode:
+
+```
+docker compose up -d
+```
+
+---
+
+## docker compose down
+
+Stop and remove containers:
+
+```
+docker compose down
+```
+
+With volumes:
+
+```
+docker compose down -v
+```
+
+---
+
+## docker compose build
+
+Build services:
+
+```
+docker compose build
+```
+
+Rebuild without cache:
+
+```
+docker compose build --no-cache
+```
+
+---
+
+## docker compose ps
+
+List running services:
+
+```
+docker compose ps
+```
+
+---
+
+## docker compose logs
+
+View logs:
+
+```
+docker compose logs
+```
+
+Follow logs:
+
+```
+docker compose logs -f
+```
+
+---
+
+## docker compose restart
+
+Restart services:
+
+```
+docker compose restart
+```
+
+---
+
+## docker compose stop
+
+Stop services without removing:
+
+```
+docker compose stop
+```
+
+---
+
+# How Compose Works Internally
+
+When you run:
+
+```
+docker compose up
+```
+
+Compose:
+
+1. Reads YAML file
+2. Creates networks
+3. Creates volumes
+4. Builds images (if needed)
+5. Starts containers
+6. Connects containers
+
+All automatically.
+
+---
+
+# Benefits of Docker Compose
+
+* Single configuration file
+* Clean architecture
+* Easy scaling
+* Easy restart
+* Better readability
+* Infrastructure as Code
+
+---
+
+# Scaling Example
+
+```
+docker compose up --scale app=3
+```
+
+Creates:
+
+* 3 app containers
+* Load balanced internally
+
+---
+
+# Best Practices
+
+* Use custom networks
+* Use named volumes
+* Use environment variables
+* Avoid hardcoding secrets
+* Keep services separated
+
+---
+
+# Compose vs Docker Run
+
+| Feature                | docker run | docker compose |
+| ---------------------- | ---------- | -------------- |
+| Single container       | Yes        | Yes            |
+| Multi container        | Hard       | Easy           |
+| Reproducible setup     | Manual     | Automatic      |
+| Clean architecture     | No         | Yes            |
+| Infrastructure as Code | No         | Yes            |
+
+---
+
+# Final Summary
+
+Docker Compose:
+
+* Manages multi-container applications
+* Uses YAML configuration
+* Simplifies container orchestration
+* Essential for real projects
+* Makes development and deployment easier
+
+---
+
 
 
