@@ -17,16 +17,6 @@ All services are managed using **Docker Compose**, allowing the entire stack to 
 The final system allows access to the Strapi Admin Dashboard via:
 `http://localhost/admin`
 
-All steps were executed on **Ubuntu 24.04 LTS (WSL2)**.
-
-Perfect 👍 Since you’ve now moved to **Docker Compose**, your README must:
-
-* Explain the **architecture**
-* Explain **why Compose**
-* Explain the `docker-compose.yml` file **line-by-line**
-* Explain how to run it
-* Mention improvements over manual setup
-
 ---
 
 # Architecture
