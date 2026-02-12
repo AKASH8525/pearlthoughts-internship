@@ -86,6 +86,7 @@ akash2627/strapi-devops:day4
 
 Docker Hub Repository:
 [https://hub.docker.com/repository/docker/akash2627/strapi-devops/general](https://hub.docker.com/repository/docker/akash2627/strapi-devops/general)
+<img width="1907" height="564" alt="Screenshot 2026-02-12 124326" src="https://github.com/user-attachments/assets/5065733d-7cbd-480f-a7d4-83ed19887f5d" />
 
 ---
 
@@ -130,12 +131,16 @@ terraform init
 ```
 terraform plan
 ```
+<img width="1197" height="869" alt="Screenshot 2026-02-12 124224" src="https://github.com/user-attachments/assets/3877620f-cefb-4188-813a-175c587ee119" />
+
 
 ### Step 3 – Apply Infrastructure
 
 ```
 terraform apply
 ```
+<img width="1004" height="349" alt="Screenshot 2026-02-12 124207" src="https://github.com/user-attachments/assets/bed16553-652d-4a92-a673-e452f414afac" />
+
 
 After successful deployment, Terraform outputs the public IP address.
 
@@ -144,6 +149,8 @@ Access Strapi using:
 ```
 http://<PUBLIC_IP>:1337
 ```
+![Uploading Screenshot 2026-02-12 124250.png…]()
+
 
 ---
 
