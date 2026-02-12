@@ -149,8 +149,8 @@ Access Strapi using:
 ```
 http://<PUBLIC_IP>:1337
 ```
-![Uploading Screenshot 2026-02-12 124250.png…]()
 
+<img width="1523" height="983" alt="Screenshot 2026-02-12 124250" src="https://github.com/user-attachments/assets/f0278498-72a1-4535-a845-e70b752abf38" />
 
 ---
 
