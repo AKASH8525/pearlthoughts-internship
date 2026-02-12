@@ -214,14 +214,6 @@ Docker Hub Repository:
 [https://hub.docker.com/repository/docker/akash2627/strapi-devops/general](https://hub.docker.com/repository/docker/akash2627/strapi-devops/general)
 <img width="1907" height="564" alt="Screenshot 2026-02-12 124326" src="https://github.com/user-attachments/assets/5065733d-7cbd-480f-a7d4-83ed19887f5d" />
 
----
-
-Very good decision.
-Yes — explaining Terraform files line by line in the README makes it much more professional.
-
-We will add a new section before “Deployment Steps”.
-
-You can paste the following into your README.
 
 ---
 
