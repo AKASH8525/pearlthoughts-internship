@@ -1,527 +1,451 @@
+---
+
+# Day 4 – Deploy Strapi on EC2 using Terraform Modules and Amazon ECR (us-east-1)
 
 ---
 
-# Day 4 – Deploy Strapi on EC2 using Terraform and Docker
+# 1. Project Overview
 
-## 1. Objective
+The objective of this project is to deploy a Dockerized Strapi application on AWS EC2 using modular Terraform and private Amazon ECR.
 
-The objective of this task is to automate the deployment of a Strapi application on AWS EC2 using Docker and Terraform.
+The deployment must:
 
-The entire infrastructure and application setup is provisioned automatically using Infrastructure as Code (Terraform). No manual configuration was performed on the EC2 instance.
+* Use only the us-east-1 region
+* Use the company AWS account
+* Use an existing IAM role (ec2-ecr-role)
+* Store Docker image in private ECR
+* Be fully automated using Infrastructure as Code
 
----
-
-## 2. Architecture Overview
-
-The deployment flow is as follows:
-
-1. Strapi application is containerized using Docker.
-2. Docker image is pushed to Docker Hub.
-3. Terraform provisions:
-
-   * Security Group
-   * EC2 instance
-4. EC2 executes a user_data script that:
-
-   * Installs Docker
-   * Pulls the Docker image from Docker Hub
-   * Runs the Strapi container
-5. Strapi becomes accessible via the EC2 Public IP on port 1337.
-
-This ensures a fully automated deployment process.
+The final outcome is a fully automated EC2 deployment that pulls a Docker image from private ECR and runs the Strapi application.
 
 ---
 
-## 3. Tools and Technologies Used
+# 2. Approach
 
-* Ubuntu 24.04 LTS (WSL)
-* Docker
-* Docker Hub
-* Terraform
-* AWS EC2
-* AWS IAM
-* Git and GitHub
+We followed this structured approach:
+
+1. Containerized the Strapi application using Docker.
+2. Verified the container locally.
+3. Created modular Terraform structure.
+4. Created private ECR repository.
+5. Pushed Docker image to ECR.
+6. Created Security Group module.
+7. Created EC2 module.
+8. Attached existing IAM role to EC2.
+9. Automated Docker installation and ECR login using user_data.
+10. Recreated EC2 to pull the final image.
+
+This ensures a secure and fully automated deployment.
 
 ---
 
-## 4. Project Structure
+# 3. Terraform Project Structure
 
 ```
-day-04-terraform-strapi-docker/
+terraform/
 │
-├── strapi-app/
-│   ├── Dockerfile
-│   └── Strapi source code
+├── provider.tf
+├── main.tf
+├── variables.tf
+├── outputs.tf
 │
-├── terraform/
-│   ├── provider.tf
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── terraform.tfvars
-│   └── user_data.sh
-│
-└── README.md
+└── modules/
+    ├── ecr/
+    ├── security-group/
+    └── ec2/
 ```
 
----
-
-## 5. Docker Implementation
-
-### Dockerfile
-
-The Strapi application was containerized using a Node.js base image:
-
-* Base Image: node:20-bullseye
-* Production dependencies installed
-* Admin panel built
-* Application runs in production mode
-* Port 1337 exposed
-
-# Dockerfile Explanation 
-
-This section explains each instruction used in the Dockerfile for containerizing the Strapi application.
+Each component is separated into modules for clean architecture.
 
 ---
 
-## Dockerfile
-
-```dockerfile
-FROM node:20-bullseye
-```
-
-Explanation:
-
-* Specifies the base image for the container.
-* `node:20-bullseye` is a Debian-based Node.js image.
-* We used this instead of Alpine because SQLite (better-sqlite3) requires glibc, which is not fully supported in Alpine.
-* This ensures compatibility and stability.
+# 4. Terraform Files – Line by Line Explanation
 
 ---
 
-```dockerfile
-WORKDIR /app
-```
-
-Explanation:
-
-* Sets the working directory inside the container.
-* All following commands will execute inside `/app`.
-* Keeps container file structure organized.
-
----
-
-```dockerfile
-COPY package*.json ./
-```
-
-Explanation:
-
-* Copies `package.json` and `package-lock.json` into the container.
-* This allows dependency installation before copying the full source code.
-* Improves Docker layer caching.
-
----
-
-```dockerfile
-RUN npm install --production
-```
-
-Explanation:
-
-* Installs only production dependencies.
-* Excludes development dependencies.
-* Reduces image size.
-* Prepares the environment for production deployment.
-
----
-
-```dockerfile
-COPY . .
-```
-
-Explanation:
-
-* Copies the remaining application source code into the container.
-* Includes configuration files, source code, and assets.
-
----
-
-```dockerfile
-RUN npm run build
-```
-
-Explanation:
-
-* Builds the Strapi admin panel.
-* Prepares static files required for the admin interface.
-* Ensures application is production-ready.
-
----
-
-```dockerfile
-EXPOSE 1337
-```
-
-Explanation:
-
-* Documents that the container listens on port 1337.
-* Strapi runs on port 1337 by default.
-* This does not publish the port; it only informs Docker about the expected port.
-
----
-
-```dockerfile
-ENV NODE_ENV=production
-```
-
-Explanation:
-
-* Sets the environment to production mode.
-* Ensures optimized performance.
-* Disables development-specific behavior.
-
----
-
-```dockerfile
-CMD ["npm", "run", "start"]
-```
-
-Explanation:
-
-* Defines the default command when the container starts.
-* Runs Strapi in production mode.
-* This is executed automatically when Docker container runs.
-
----
-
-# Docker Best Practices Followed
-
-* Used Debian-based image for native module compatibility.
-* Installed only production dependencies.
-* Built application before runtime.
-* Used `.dockerignore` to reduce image size.
-* Kept image structure clean and minimal.
-
----
-The image was built locally and pushed to Docker Hub:
+## 4.1 provider.tf
 
 ```
-akash2627/strapi-devops:day4
-```
-
-Docker Hub Repository:
-[https://hub.docker.com/repository/docker/akash2627/strapi-devops/general](https://hub.docker.com/repository/docker/akash2627/strapi-devops/general)
-<img width="1907" height="564" alt="Screenshot 2026-02-12 124326" src="https://github.com/user-attachments/assets/5065733d-7cbd-480f-a7d4-83ed19887f5d" />
-
-
----
-
-# 6. Terraform Configuration Explanation
-
-This section explains each Terraform file and the purpose of every configuration block used in this project.
-
----
-
-## provider.tf
-
-```hcl
 provider "aws" {
-  region = var.aws_region
+  region  = "us-east-1"
+  profile = "company"
 }
 ```
 
 Explanation:
 
-* `provider "aws"` tells Terraform that we are using the AWS cloud provider.
-* `region = var.aws_region` sets the AWS region dynamically using a variable instead of hardcoding it.
-* This allows flexibility to change regions without modifying core configuration.
+* provider "aws" tells Terraform we are using AWS.
+* region = "us-east-1" restricts deployment to Virginia region.
+* profile = "company" ensures company credentials are used instead of personal account.
 
 ---
 
-## variables.tf
+## 4.2 variables.tf
 
-```hcl
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "ap-south-1"
+```
+variable "project_name" {
+  type    = string
+  default = "strapi-devops"
 }
 ```
 
-* Defines the AWS region variable.
-* Default region is set to ap-south-1.
+Defines project name used for resource naming.
 
-```hcl
+```
 variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
+  type    = string
+  default = "t2.micro"
 }
 ```
 
-* Defines EC2 instance type.
-* Default is t2.micro (Free Tier eligible).
-
-```hcl
-variable "key_name" {
-  description = "EC2 Key pair name"
-  type        = string
-}
-```
-
-* Stores the EC2 key pair name.
-* Required for SSH access.
-
-```hcl
-variable "docker_image" {
-  description = "Docker image to deploy"
-  type        = string
-  default     = "akash2627/strapi-devops:day4"
-}
-```
-
-* Defines the Docker image that will be pulled inside EC2.
-* Makes image configurable without modifying main.tf.
+Defines EC2 instance type.
 
 ---
 
-## main.tf
+## 4.3 main.tf (Root Module)
 
-### Fetch Latest Ubuntu AMI
+```
+module "ecr" {
+  source       = "./modules/ecr"
+  project_name = var.project_name
+}
+```
 
-```hcl
-data "aws_ami" "ubuntu" {
-  most_recent = true
+Calls ECR module.
 
-  owners = ["099720109477"]
+```
+module "security_group" {
+  source       = "./modules/security-group"
+  project_name = var.project_name
+}
+```
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+Calls Security Group module.
+
+```
+module "ec2" {
+  source             = "./modules/ec2"
+  project_name       = var.project_name
+  instance_type      = var.instance_type
+  security_group_id  = module.security_group.security_group_id
+  ecr_repository_url = module.ecr.repository_url
+}
+```
+
+Passes outputs between modules:
+
+* Security group ID
+* ECR repository URL
+
+---
+
+## 4.4 outputs.tf
+
+```
+output "ec2_public_ip" {
+  value = module.ec2.public_ip
+}
+```
+
+Displays EC2 public IP.
+
+```
+output "ecr_repository_url" {
+  value = module.ecr.repository_url
+}
+```
+
+Displays ECR repository URL.
+
+---
+
+# 5. ECR Module
+
+---
+
+## modules/ecr/main.tf
+
+```
+resource "aws_ecr_repository" "repo" {
+  name         = var.project_name
+  force_delete = true
+```
+
+Creates ECR repository and allows force deletion.
+
+```
+  image_scanning_configuration {
+    scan_on_push = true
   }
-}
 ```
 
-Explanation:
+Enables vulnerability scanning.
 
-* `data "aws_ami"` fetches an existing AMI instead of creating one.
-* `most_recent = true` ensures latest version is selected.
-* `owners` ensures the AMI is from Canonical (official Ubuntu publisher).
-* `filter` matches Ubuntu 22.04 images.
+```
+  image_tag_mutability = "MUTABLE"
+```
+
+Allows tag updates.
 
 ---
 
-### Security Group
+## modules/ecr/outputs.tf
 
-```hcl
-resource "aws_security_group" "strapi_sg" {
-  name        = "strapi-sg"
-  description = "Allow SSH and Strapi access"
 ```
-
-* Creates a security group.
-* Allows network access to EC2.
-
-#### SSH Rule
-
-```hcl
-ingress {
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+output "repository_url" {
+  value = aws_ecr_repository.repo.repository_url
 }
 ```
 
-* Opens port 22 for SSH access.
-* Allows inbound traffic from anywhere.
+Outputs ECR URL for other modules.
 
-#### Strapi Rule
+---
 
-```hcl
-ingress {
-  from_port   = 1337
-  to_port     = 1337
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-}
+# 6. Security Group Module
+
+---
+
+## modules/security-group/main.tf
+
+```
+resource "aws_security_group" "this" {
 ```
 
-* Opens port 1337.
-* Allows public access to Strapi application.
+Creates security group.
 
-#### Outbound Rule
+```
+ingress {
+  from_port = 22
+```
 
-```hcl
+Allows SSH.
+
+```
+ingress {
+  from_port = 1337
+```
+
+Allows Strapi access.
+
+```
 egress {
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
-}
+  protocol = "-1"
 ```
 
-* Allows all outbound traffic.
-* Required for pulling Docker image from Docker Hub.
+Allows outbound internet access.
 
 ---
 
-### EC2 Instance
+# 7. EC2 Module
 
-```hcl
-resource "aws_instance" "strapi_server" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.strapi_sg.id]
+---
+
+## modules/ec2/main.tf
+
+```
+data "aws_ami" "ubuntu" {
+```
+
+Fetches latest Ubuntu 22.04 AMI.
+
+```
+resource "aws_instance" "this" {
+```
+
+Creates EC2 instance.
+
+```
+iam_instance_profile = "ec2-ecr-role"
+```
+
+Attaches existing IAM role for ECR access.
+
+```
+user_data = templatefile(...)
+```
+
+Passes ECR URL to user_data script.
+
+---
+
+# 8. Docker Image Preparation and Local Validation
+
+After completing the Terraform structure, the next step was to prepare the application container.
+
+Before pushing anything to AWS, the Docker image was built and verified locally to ensure it works correctly.
+
+### Step 1 – Build the Docker Image
+
+```
+docker build -t strapi-devops:day4 .
 ```
 
 Explanation:
 
-* Uses Ubuntu AMI fetched earlier.
-* Uses variable-defined instance type.
-* Uses provided key pair.
-* Attaches security group.
+* `docker build` creates a container image from the Dockerfile.
+* `-t strapi-devops:day4` tags the image with a name and version.
+* This image contains the production-ready Strapi application.
+
+Building locally ensures that the container runs correctly before deploying to cloud infrastructure.
 
 ---
 
-### user_data
+### Step 2 – Validate Container Locally
 
-```hcl
-user_data = file("${path.module}/user_data.sh")
+```
+docker run -d -p 1337:1337 strapi-devops:day4
 ```
 
-* Passes the user_data.sh script to EC2.
-* This script runs automatically during instance launch.
+Explanation:
+
+* `-d` runs the container in detached mode.
+* `-p 1337:1337` maps container port to local machine.
+* This verifies the application works before pushing to ECR.
+
+The application was accessed at:
+
+```
+http://localhost:1337
+```
+
+This validation step prevents deploying broken images to ECR.
 
 ---
 
-### Tags
+# 9. Creating and Using Private Amazon ECR
 
-```hcl
-tags = {
-  Name = "strapi-terraform-server"
-}
-```
+Once the image was verified locally, the next step was to store it securely in private Amazon ECR.
 
-* Adds a name tag for easier identification in AWS console.
+ECR was created using Terraform inside the ECR module.
 
----
-
-## user_data.sh
-
-```bash
-#!/bin/bash
-apt update -y
-apt install -y docker.io
-```
-
-* Updates packages.
-* Installs Docker.
-
-```bash
-systemctl start docker
-systemctl enable docker
-```
-
-* Starts Docker service.
-* Ensures Docker starts automatically on reboot.
-
-```bash
-docker pull akash2627/strapi-devops:day4
-```
-
-* Pulls Docker image from Docker Hub.
-
-```bash
-docker run -d -p 1337:1337 --name strapi-container akash2627/strapi-devops:day4
-```
-
-* Runs container in detached mode.
-* Maps port 1337 to host.
-* Names container for identification.
-
----
-
-## outputs.tf
-
-```hcl
-output "public_ip" {
-  value = aws_instance.strapi_server.public_ip
-}
-```
-
-* Displays EC2 public IP after deployment.
-* Used to access Strapi application.
-
----
-
----
-
-## 7. Deployment Steps
-
-### Step 1 – Initialize Terraform
-
-```
-terraform init
-```
-
-### Step 2 – Review Plan
-
-```
-terraform plan
-```
-<img width="1197" height="869" alt="Screenshot 2026-02-12 124224" src="https://github.com/user-attachments/assets/3877620f-cefb-4188-813a-175c587ee119" />
-
-
-### Step 3 – Apply Infrastructure
+After running:
 
 ```
 terraform apply
 ```
-<img width="1004" height="349" alt="Screenshot 2026-02-12 124207" src="https://github.com/user-attachments/assets/bed16553-652d-4a92-a673-e452f414afac" />
 
-
-After successful deployment, Terraform outputs the public IP address.
-
-Access Strapi using:
+Terraform output:
 
 ```
-http://<PUBLIC_IP>:1337
+ecr_repository_url = 811738710312.dkr.ecr.us-east-1.amazonaws.com/strapi-devops
 ```
 
-<img width="1523" height="983" alt="Screenshot 2026-02-12 124250" src="https://github.com/user-attachments/assets/f0278498-72a1-4535-a845-e70b752abf38" />
+This repository URL is required to push the image.
 
 ---
 
-## 8. Verification
+### Step 1 – Authenticate Docker to Private ECR
 
-* EC2 instance launched successfully
-* Docker installed automatically
-* Container pulled from Docker Hub
-* Strapi accessible via Public IP
-* Admin panel loads successfully
+```
+aws ecr get-login-password --region us-east-1 --profile company | docker login --username AWS --password-stdin 811738710312.dkr.ecr.us-east-1.amazonaws.com
+```
 
----
+Explanation:
 
-## 9. Key Learning Outcomes
+* `aws ecr get-login-password` generates a temporary authentication token.
+* Docker uses this token to authenticate to private ECR.
+* This avoids storing credentials in code.
+* Authentication is valid temporarily and secure.
 
-* Containerizing a Node.js application using Docker
-* Debugging native module issues (Alpine vs Debian images)
-* Publishing Docker images to Docker Hub
-* Automating EC2 provisioning using Terraform
-* Using user_data for application bootstrapping
-* Deploying applications without manual server configuration
+Login must succeed before pushing images.
 
 ---
 
-## 10. Conclusion
+### Step 2 – Tag the Image for ECR
 
-This project demonstrates a complete automated deployment workflow using Docker and Terraform.
+```
+docker tag strapi-devops:day4 811738710312.dkr.ecr.us-east-1.amazonaws.com/strapi-devops:latest
+```
 
-The infrastructure and application setup are fully automated and reproducible. This approach follows DevOps best practices and Infrastructure as Code principles.
+Explanation:
+
+* The local image must be re-tagged with the full ECR repository path.
+* ECR requires images to be tagged with its registry URL.
+* `latest` tag is used for deployment simplicity.
 
 ---
 
+### Step 3 – Push Image to ECR
+
+```
+docker push 811738710312.dkr.ecr.us-east-1.amazonaws.com/strapi-devops:latest
+```
+
+Explanation:
+
+* Uploads image layers to private ECR.
+* Now the image is available for EC2 to pull.
+* The ECR repository now stores the production container image.
+
+---
+
+# 10. EC2 Bootstrapping Flow
+
+When Terraform creates EC2, it does not manually configure anything.
+
+Instead, automation happens through the `user_data` script.
+
+EC2 module attaches:
+
+```
+iam_instance_profile = "ec2-ecr-role"
+```
+
+This IAM role allows EC2 to access private ECR securely.
+
+---
+
+### What Happens During EC2 Launch
+
+When EC2 starts, the following occurs automatically:
+
+1. System packages are updated.
+2. Docker is installed.
+3. AWS CLI is installed.
+4. EC2 authenticates to ECR using IAM role.
+5. Docker pulls the image from private ECR.
+6. The Strapi container is started on port 1337.
+
+This process requires no manual SSH configuration.
+
+---
+
+# 11. Final Synchronization Step
+
+During initial deployment, EC2 may start before the image is pushed to ECR.
+
+To ensure EC2 pulls the correct image, the instance is recreated:
+
+```
+terraform taint module.ec2.aws_instance.this
+terraform apply
+```
+
+Explanation:
+
+* `terraform taint` marks EC2 for recreation.
+* On re-creation, EC2 runs user_data again.
+* It pulls the newly pushed image from ECR.
+* Ensures deployment consistency.
+
+---
+
+# 12. Final Application Access
+
+After EC2 completes initialization, the application becomes available at:
+
+```
+http://<EC2_PUBLIC_IP>:1337
+```
+
+The Strapi admin interface loads successfully.
+
+This confirms:
+
+* ECR authentication worked.
+* IAM role was correctly attached.
+* Docker container is running.
+* Infrastructure automation is successful.
+
+---
 
