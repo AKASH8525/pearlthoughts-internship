@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'day-04-terraform-strapi-docker/strapi-app/**'
-
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: strapi-devops
