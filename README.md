@@ -52,39 +52,44 @@ Push to main
 The following technologies and services are used in this project:
 
 ### GitHub Actions
+
 Used to implement Continuous Integration (CI) and Continuous Deployment (CD) workflows.
 
 ### Docker
+
 Used to containerize the Strapi application and ensure consistent runtime behavior across environments.
 
 ### Terraform
+
 Used as Infrastructure as Code (IaC) to provision and manage AWS resources.
 
 ### Amazon EC2
+
 Hosts the Strapi Docker container.
 
 ### Amazon ECR
+
 Stores private Docker images built by the CI pipeline.
 
 ### Amazon S3
+
 Used as a remote backend for Terraform state management.
 
 ### AWS IAM
+
 Used to assign an IAM instance profile to EC2, allowing secure access to ECR without hardcoded credentials.
 
 ### Ubuntu 22.04 (EC2)
+
 Base operating system for the EC2 instance.
+
 ---
 
-
-```
 ## 5. Repository Structure
 
 The repository is organized to clearly separate application code, infrastructure code, and CI/CD workflows.
 
-
 ```
-
 pearlthoughts-internship/
 │
 ├── .github/
@@ -139,8 +144,6 @@ pearlthoughts-internship/
 
 This structure ensures separation of concerns between application code, infrastructure code, and automation workflows.
 
-```
-
 ---
 
 ## 6. Infrastructure Design
@@ -151,25 +154,33 @@ The infrastructure is provisioned using Terraform following a modular and produc
 
 The Terraform configuration is divided into reusable modules:
 
-- **Security Group Module**
-  - Creates a security group allowing:
-    - Port 22 (SSH)
-    - Port 1337 (Strapi application)
-  - Enables controlled network access.
+* **Security Group Module**
+* Creates a security group allowing:
+* Port 22 (SSH)
+* Port 1337 (Strapi application)
 
-- **ECR Module**
-  - Creates a private Amazon ECR repository.
-  - Enables image scanning on push.
-  - Stores Docker images built by the CI pipeline.
 
-- **EC2 Module**
-  - Launches an Ubuntu EC2 instance.
-  - Attaches an IAM instance profile (`ec2-ecr-role`) to allow secure ECR access.
-  - Uses user_data to:
-    - Install Docker and AWS CLI.
-    - Authenticate with ECR.
-    - Pull the specified Docker image.
-    - Run the Strapi container with required environment variables.
+* Enables controlled network access.
+
+
+* **ECR Module**
+* Creates a private Amazon ECR repository.
+* Enables image scanning on push.
+* Stores Docker images built by the CI pipeline.
+
+
+* **EC2 Module**
+* Launches an Ubuntu EC2 instance.
+* Attaches an IAM instance profile (`ec2-ecr-role`) to allow secure ECR access.
+* Uses user_data to:
+* Install Docker and AWS CLI.
+* Authenticate with ECR.
+* Pull the specified Docker image.
+* Run the Strapi container with required environment variables.
+
+
+
+
 
 This modular approach improves clarity, reusability, and maintainability.
 
@@ -181,10 +192,10 @@ Terraform uses an Amazon S3 bucket as a remote backend for storing state files.
 
 Benefits of using a remote backend:
 
-- Prevents state conflicts.
-- Enables consistent infrastructure tracking across CI/CD runs.
-- Ensures state persistence between local and GitHub Actions environments.
-- Avoids accidental infrastructure recreation.
+* Prevents state conflicts.
+* Enables consistent infrastructure tracking across CI/CD runs.
+* Ensures state persistence between local and GitHub Actions environments.
+* Avoids accidental infrastructure recreation.
 
 ---
 
@@ -192,17 +203,17 @@ Benefits of using a remote backend:
 
 The EC2 instance is designed to:
 
-- Automatically install Docker during boot.
-- Authenticate with Amazon ECR using IAM role permissions.
-- Pull a Docker image tagged with the commit SHA.
-- Restart the container when a new image tag is deployed.
+* Automatically install Docker during boot.
+* Authenticate with Amazon ECR using IAM role permissions.
+* Pull a Docker image tagged with the commit SHA.
+* Restart the container when a new image tag is deployed.
 
 When the `image_tag` variable changes:
 
-- Terraform detects configuration changes.
-- The EC2 instance updates.
-- The new Docker image is pulled.
-- The Strapi container is restarted with the updated version.
+* Terraform detects configuration changes.
+* The EC2 instance updates.
+* The new Docker image is pulled.
+* The Strapi container is restarted with the updated version.
 
 This ensures controlled and versioned deployments.
 
@@ -214,27 +225,12 @@ Each Docker image is tagged using the Git commit SHA.
 
 Advantages:
 
-- Clear traceability between source code and deployed version.
-- No ambiguity in image versions.
-- Supports rollback if necessary.
+* Clear traceability between source code and deployed version.
+* No ambiguity in image versions.
+* Supports rollback if necessary.
 
 ---
 
-
-```markdown
-## 7. Continuous Integration (CI) Workflow
-
-The CI workflow is defined in:
-
-.github/workflows/ci.yml
-
-Its responsibility is to automatically build and push the Docker image of the Strapi application to Amazon ECR whenever code is pushed to the main branch.
-```
-
----
-
-
-```
 ## 7. Continuous Integration (CI) Workflow
 
 The CI workflow is defined in:
@@ -418,7 +414,7 @@ This step enables Docker push operations to ECR.
 
 1. Construct full image URI:
 ```
-<account-id>.dkr.ecr.<region>[.amazonaws.com/strapi-devops](https://.amazonaws.com/strapi-devops):<commit-sha>
+<account-id>.dkr.ecr.<region>.amazonaws.com/strapi-devops:<commit-sha>
 
 ```
 
@@ -456,11 +452,8 @@ This ensures:
 * Image traceability between source code and deployment.
 * Automated container build process.
 
-```
-
 ---
 
-```
 ## 8. Continuous Deployment (CD) Workflow
 
 The CD workflow is defined in:
@@ -475,7 +468,7 @@ Unlike CI, this workflow is manually triggered to ensure controlled production d
 
 ### 8.1 Workflow Trigger (Manual Deployment)
 
-```
+```yaml
 name: CD - Deploy with Terraform
 
 on:
