@@ -1,20 +1,7 @@
-Good. I will give you clean, professional content for sections **1–4 only**. No emojis. Formal tone.
-
-You can paste this into your root `README.md`.
-
----
-
-# 1. Project Title
-
-```
 # Automated Strapi Deployment using GitHub Actions and Terraform on AWS
-```
 
 ---
 
-# 2. Project Overview
-
-```
 ## 2. Project Overview
 
 This project implements a complete CI/CD pipeline to automate the deployment of a Strapi application using GitHub Actions and Terraform on AWS.
@@ -28,13 +15,9 @@ The objective of this project is to:
 - Automatically deploy and run the updated Docker image on an EC2 instance.
 
 This setup ensures a structured, repeatable, and automated deployment process using Infrastructure as Code principles.
-```
 
 ---
 
-# 3. Architecture Overview
-
-```
 ## 3. Architecture Overview
 
 The deployment architecture follows a structured CI/CD workflow:
@@ -59,13 +42,9 @@ Push to main
 → EC2 pulls updated image  
 → Docker container restarts  
 → Strapi application becomes available via public IP
-```
 
 ---
 
-# 4. Technology Stack
-
-```
 ## 4. Technology Stack
 
 The following technologies and services are used in this project:
@@ -93,8 +72,6 @@ Used to assign an IAM instance profile to EC2, allowing secure access to ECR wit
 
 ### Ubuntu 22.04 (EC2)
 Base operating system for the EC2 instance.
-```
-
 
 ---
 
