@@ -1,0 +1,49 @@
+name: CD - Deploy with Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag to deploy"
+        required: true
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: day-04-terraform-strapi-docker/terraform-day5
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: day-04-terraform-strapi-docker/terraform-day5
+        run: |
+          terraform plan \
+          -var="project_name=strapi-devops" \
+          -var="image_tag=${{ github.event.inputs.image_tag }}" \
+          -var="key_name=Akash-PT"
+
+      - name: Terraform Apply
+        working-directory: day-04-terraform-strapi-docker/terraform-day5
+        run: |
+          terraform apply -auto-approve \
+          -var="project_name=strapi-devops" \
+          -var="image_tag=${{ github.event.inputs.image_tag }}" \
+          -var="key_name=Akash-PT"
