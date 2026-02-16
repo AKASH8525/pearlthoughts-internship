@@ -154,7 +154,7 @@ The infrastructure is provisioned using Terraform following a modular and produc
 
 The Terraform configuration is divided into reusable modules:
 
-* **Security Group Module**
+**Security Group Module**
 * Creates a security group allowing:
 * Port 22 (SSH)
 * Port 1337 (Strapi application)
@@ -163,13 +163,13 @@ The Terraform configuration is divided into reusable modules:
 * Enables controlled network access.
 
 
-* **ECR Module**
+**ECR Module**
 * Creates a private Amazon ECR repository.
 * Enables image scanning on push.
 * Stores Docker images built by the CI pipeline.
 
 
-* **EC2 Module**
+**EC2 Module**
 * Launches an Ubuntu EC2 instance.
 * Attaches an IAM instance profile (`ec2-ecr-role`) to allow secure ECR access.
 * Uses user_data to:
@@ -177,10 +177,6 @@ The Terraform configuration is divided into reusable modules:
 * Authenticate with ECR.
 * Pull the specified Docker image.
 * Run the Strapi container with required environment variables.
-
-
-
-
 
 This modular approach improves clarity, reusability, and maintainability.
 
