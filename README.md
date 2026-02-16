@@ -175,11 +175,6 @@ The Terraform configuration is divided into reusable modules:
 * Authenticate with ECR.
 * Pull the specified Docker image.
 * Run the Strapi container with required environment variables.
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 26dda5b (Update README.md)
 This modular approach improves clarity, reusability, and maintainability.
 
 ---
@@ -670,7 +665,7 @@ This approach ensures:
 * Infrastructure managed entirely as code.
 * Full traceability between Git commit and running application version.
 
-```
+
 ---
 
 ## 9. Deployment Workflow
@@ -810,6 +805,32 @@ docker run -d -p 1337:1337 --name strapi --restart unless-stopped \
 <image-uri>
 
 ```
+
+---
+
+### 10.3 Why Environment Variables Are Required
+
+Strapi does not allow startup without these secrets because:
+
+* JWT signing requires secure keys.
+* Admin authentication must be protected.
+* API token generation requires a salt value.
+
+Without these variables, Strapi fails at runtime with configuration errors.
+
+---
+
+### 10.4 Version-Based Deployment
+
+The Docker image version is passed as:
+
+`-var="image_tag=<commit-sha>"`
+
+When this value changes:
+
+* Terraform updates EC2 configuration.
+* The instance pulls the new image.
+* The container restarts with updated code.
 
 ---
 
