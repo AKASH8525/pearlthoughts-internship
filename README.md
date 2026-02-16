@@ -158,8 +158,6 @@ The Terraform configuration is divided into reusable modules:
 * Creates a security group allowing:
 * Port 22 (SSH)
 * Port 1337 (Strapi application)
-
-
 * Enables controlled network access.
 
 
@@ -178,6 +176,10 @@ The Terraform configuration is divided into reusable modules:
 * Pull the specified Docker image.
 * Run the Strapi container with required environment variables.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 26dda5b (Update README.md)
 This modular approach improves clarity, reusability, and maintainability.
 
 ---
@@ -671,17 +673,14 @@ This approach ensures:
 ```
 ---
 
-# 9. Deployment Workflow (End-to-End Execution Process)
-
-```markdown
 ## 9. Deployment Workflow
 
 This section describes the complete end-to-end flow from code change to live application deployment.
 
 The workflow is divided into two phases:
 
-- Continuous Integration (CI)
-- Continuous Deployment (CD)
+* Continuous Integration (CI)
+* Continuous Deployment (CD)
 
 ---
 
@@ -702,16 +701,15 @@ Once code is pushed:
 3. The runner authenticates with AWS using GitHub Secrets.
 4. The Docker image is built from the `strapi-app` directory.
 5. The image is tagged using:
-   
-   <account-id>.dkr.ecr.<region>.amazonaws.com/strapi-devops:<commit-sha>
-
+`<account-id>.dkr.ecr.<region>.amazonaws.com/strapi-devops:<commit-sha>`
 6. The image is pushed to the private Amazon ECR repository.
 7. The CI job completes successfully, and the image becomes available for deployment.
 
 At this stage:
-- No infrastructure changes occur.
-- The new image version is stored securely in ECR.
-- The commit SHA uniquely identifies the image version.
+
+* No infrastructure changes occur.
+* The new image version is stored securely in ECR.
+* The commit SHA uniquely identifies the image version.
 
 ---
 
@@ -732,10 +730,12 @@ Once triggered:
 4. If the image_tag has changed, Terraform updates the EC2 configuration.
 5. The EC2 instance executes updated user_data.
 6. The instance:
-   - Logs in to Amazon ECR
-   - Pulls the new Docker image
-   - Stops the existing Strapi container
-   - Starts a new container with the updated image
+* Logs in to Amazon ECR
+* Pulls the new Docker image
+* Stops the existing Strapi container
+* Starts a new container with the updated image
+
+
 
 ---
 
@@ -745,9 +745,7 @@ After Terraform apply completes:
 
 1. The EC2 instance outputs the public IP.
 2. The Strapi application becomes available at:
-
-   http://<public-ip>:1337
-
+`http://<public-ip>:1337`
 3. The deployed version corresponds exactly to the commit SHA selected during deployment.
 
 ---
@@ -756,18 +754,15 @@ After Terraform apply completes:
 
 This workflow guarantees:
 
-- Each deployment corresponds to a specific Git commit.
-- Docker images are versioned using commit SHA.
-- Infrastructure changes are fully managed by Terraform.
-- No manual Docker commands are required after CD is properly configured.
+* Each deployment corresponds to a specific Git commit.
+* Docker images are versioned using commit SHA.
+* Infrastructure changes are fully managed by Terraform.
+* No manual Docker commands are required after CD is properly configured.
 
 This ensures a reliable, repeatable, and auditable deployment process.
-```
 
 ---
 
-
-```markdown
 ## 10. Runtime Configuration and Environment Variables
 
 The Strapi application requires several runtime environment variables to function correctly in production mode.
@@ -778,18 +773,18 @@ These variables are injected during container startup using Docker `-e` flags in
 
 The following environment variables are configured:
 
-- APP_KEYS  
-- ADMIN_JWT_SECRET  
-- JWT_SECRET  
-- API_TOKEN_SALT  
-- NODE_ENV=production  
+* `APP_KEYS`
+* `ADMIN_JWT_SECRET`
+* `JWT_SECRET`
+* `API_TOKEN_SALT`
+* `NODE_ENV=production`
 
 These variables are mandatory for Strapi v4 to:
 
-- Secure admin authentication
-- Generate and validate JWT tokens
-- Manage API tokens
-- Operate in production mode
+* Secure admin authentication
+* Generate and validate JWT tokens
+* Manage API tokens
+* Operate in production mode
 
 ---
 
@@ -805,6 +800,7 @@ During Terraform deployment:
 
 Example Docker run command:
 
+```bash
 docker run -d -p 1337:1337 --name strapi --restart unless-stopped \
 -e APP_KEYS="..." \
 -e ADMIN_JWT_SECRET="..." \
@@ -813,15 +809,17 @@ docker run -d -p 1337:1337 --name strapi --restart unless-stopped \
 -e NODE_ENV=production \
 <image-uri>
 
+```
+
 ---
 
 ### 10.3 Why Environment Variables Are Required
 
 Strapi does not allow startup without these secrets because:
 
-- JWT signing requires secure keys.
-- Admin authentication must be protected.
-- API token generation requires a salt value.
+* JWT signing requires secure keys.
+* Admin authentication must be protected.
+* API token generation requires a salt value.
 
 Without these variables, Strapi fails at runtime with configuration errors.
 
@@ -831,20 +829,14 @@ Without these variables, Strapi fails at runtime with configuration errors.
 
 The Docker image version is passed as:
 
--var="image_tag=<commit-sha>"
+`-var="image_tag=<commit-sha>"`
 
 When this value changes:
 
-- Terraform updates EC2 configuration.
-- The instance pulls the new image.
-- The container restarts with updated code.
-```
+* Terraform updates EC2 configuration.
+* The instance pulls the new image.
+* The container restarts with updated code.
 
----
-
-# 11. Security Considerations
-
-```markdown
 ## 11. Security Considerations
 
 This project follows multiple security best practices to protect infrastructure and credentials.
@@ -853,9 +845,9 @@ This project follows multiple security best practices to protect infrastructure 
 
 AWS credentials are stored securely in GitHub Secrets:
 
-- AWS_ACCESS_KEY_ID
-- AWS_SECRET_ACCESS_KEY
-- AWS_ACCOUNT_ID
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_ACCOUNT_ID`
 
 They are never committed to the repository.
 
@@ -865,12 +857,12 @@ They are never committed to the repository.
 
 The EC2 instance uses an IAM instance profile:
 
-ec2-ecr-role
+`ec2-ecr-role`
 
 This allows:
 
-- Secure authentication with Amazon ECR.
-- Pulling Docker images without embedding AWS keys in the instance.
+* Secure authentication with Amazon ECR.
+* Pulling Docker images without embedding AWS keys in the instance.
 
 This follows the principle of least privilege.
 
@@ -880,12 +872,12 @@ This follows the principle of least privilege.
 
 Docker images are stored in:
 
-Amazon Elastic Container Registry (ECR)
+**Amazon Elastic Container Registry (ECR)**
 
 The repository is private, ensuring:
 
-- Images are not publicly accessible.
-- Controlled access through IAM permissions.
+* Images are not publicly accessible.
+* Controlled access through IAM permissions.
 
 ---
 
@@ -895,41 +887,37 @@ Terraform state is stored in Amazon S3.
 
 Benefits:
 
-- Prevents local state conflicts.
-- Protects infrastructure state from accidental deletion.
-- Enables consistent infrastructure tracking across environments.
+* Prevents local state conflicts.
+* Protects infrastructure state from accidental deletion.
+* Enables consistent infrastructure tracking across environments.
 
 ---
 
 ### 11.5 Controlled Deployment
 
-Continuous Deployment is manual (workflow_dispatch).
+Continuous Deployment is manual (`workflow_dispatch`).
 
 This ensures:
 
-- No accidental production deployment.
-- Controlled release management.
-- Explicit version selection during deployment.
-```
+* No accidental production deployment.
+* Controlled release management.
+* Explicit version selection during deployment.
 
 ---
 
-# 12. Verification and Testing Steps
-
-```markdown
 ## 12. Verification and Testing Steps
 
 After deployment, the following steps can be used to verify successful execution.
-
----
 
 ### 12.1 Verify CI Success
 
 1. Navigate to GitHub Actions.
 2. Open the CI workflow run.
 3. Confirm:
-   - Docker build completed successfully.
-   - Image pushed to ECR.
+* Docker build completed successfully.
+* Image pushed to ECR.
+
+
 4. Verify image exists in Amazon ECR console.
 
 ---
@@ -937,12 +925,14 @@ After deployment, the following steps can be used to verify successful execution
 ### 12.2 Verify CD Success
 
 1. Trigger the CD workflow manually.
-2. Provide the desired image_tag.
+2. Provide the desired `image_tag`.
 3. Confirm:
-   - terraform init completed.
-   - terraform plan detected changes.
-   - terraform apply completed successfully.
-4. Note the output public_ip.
+* `terraform init` completed.
+* `terraform plan` detected changes.
+* `terraform apply` completed successfully.
+
+
+4. Note the output `public_ip`.
 
 ---
 
@@ -950,15 +940,22 @@ After deployment, the following steps can be used to verify successful execution
 
 SSH into the EC2 instance:
 
+```bash
 ssh -i <key.pem> ubuntu@<public-ip>
+
+```
 
 Check running containers:
 
+```bash
 sudo docker ps
 
+```
+
 Confirm that:
-- The container is running.
-- The image tag matches the selected commit SHA.
+
+* The container is running.
+* The image tag matches the selected commit SHA.
 
 ---
 
@@ -966,7 +963,10 @@ Confirm that:
 
 Open a browser and navigate to:
 
+```
 http://<public-ip>:1337
+
+```
 
 If deployment is successful, the Strapi application will load without errors.
 
@@ -976,63 +976,64 @@ If deployment is successful, the Strapi application will load without errors.
 
 If the application is not accessible:
 
-- Confirm port 1337 is open in the security group.
-- Check Docker container status.
-- Review container logs:
+* Confirm port 1337 is open in the security group.
+* Check Docker container status.
+* Review container logs:
 
-  sudo docker logs strapi
+```bash
+sudo docker logs strapi
 
-- Confirm ECR login succeeded in user_data.
-- Ensure environment variables are correctly passed.
 ```
+
+* Confirm ECR login succeeded in `user_data`.
+* Ensure environment variables are correctly passed.
 
 ---
 
-```markdown
 ## 13. Key Learnings
 
 This project provided practical experience in designing and implementing a production-style CI/CD pipeline using modern DevOps tools.
 
 ### 13.1 CI/CD Pipeline Design
 
-- Separation of CI and CD responsibilities.
-- Automated image build on push.
-- Controlled manual production deployment.
-- Version-based deployment using commit SHA.
+* Separation of CI and CD responsibilities.
+* Automated image build on push.
+* Controlled manual production deployment.
+* Version-based deployment using commit SHA.
 
 ---
 
 ### 13.2 Docker Image Versioning
 
-- Tagging Docker images using Git commit SHA ensures traceability.
-- Each deployed version directly maps to source code.
-- Enables rollback capability if needed.
+* Tagging Docker images using Git commit SHA ensures traceability.
+* Each deployed version directly maps to source code.
+* Enables rollback capability if needed.
 
 ---
 
 ### 13.3 Infrastructure as Code (Terraform)
 
-- Modular Terraform structure improves maintainability.
-- Remote backend prevents state conflicts.
-- Infrastructure changes are predictable and version-controlled.
-- Deployment logic fully automated via Terraform variables.
+* Modular Terraform structure improves maintainability.
+* Remote backend prevents state conflicts.
+* Infrastructure changes are predictable and version-controlled.
+* Deployment logic fully automated via Terraform variables.
 
 ---
 
 ### 13.4 AWS Service Integration
 
-- Secure authentication with AWS using GitHub Secrets.
-- IAM instance profile eliminates need for hardcoded credentials.
-- Private ECR used as a secure container registry.
-- EC2 user_data used for bootstrapping Docker environment.
+* Secure authentication with AWS using GitHub Secrets.
+* IAM instance profile eliminates need for hardcoded credentials.
+* Private ECR used as a secure container registry.
+* EC2 `user_data` used for bootstrapping Docker environment.
 
 ---
 
 ### 13.5 Runtime Configuration Management
 
-- Understanding of environment-based configuration.
-- Proper handling of required secrets for Strapi.
-- Importance of runtime variables in containerized applications.
+* Understanding of environment-based configuration.
+* Proper handling of required secrets for Strapi.
+* Importance of runtime variables in containerized applications.
 
 ---
 
@@ -1040,90 +1041,12 @@ This project provided practical experience in designing and implementing a produ
 
 During implementation, multiple real-world issues were encountered and resolved:
 
-- ECR authentication errors
-- Terraform backend configuration issues
-- EC2 public IP changes
-- Docker container startup failures
-- Missing runtime environment variables
+* ECR authentication errors
+* Terraform backend configuration issues
+* EC2 public IP changes
+* Docker container startup failures
+* Missing runtime environment variables
 
 This improved troubleshooting skills and understanding of end-to-end deployment systems.
-```
-
----
-
-# 14. Future Improvements
-
-```markdown
-## 14. Future Improvements
-
-While the current implementation achieves full CI/CD automation, the following improvements can enhance scalability, security, and production readiness.
-
----
-
-### 14.1 Elastic IP
-
-Attach a static Elastic IP to the EC2 instance to prevent public IP changes during redeployment.
-
----
-
-### 14.2 Load Balancer Integration
-
-Introduce an Application Load Balancer (ALB) to:
-
-- Improve availability.
-- Enable HTTPS termination.
-- Support scaling.
-
----
-
-### 14.3 Secure Secret Management
-
-Instead of hardcoding runtime secrets in user_data:
-
-- Use AWS Systems Manager (SSM) Parameter Store.
-- Or use AWS Secrets Manager.
-
-This improves security and centralizes secret management.
-
----
-
-### 14.4 Auto-Triggered Deployment
-
-Enable automated CD trigger after successful CI run using:
-
-- workflow_run event in GitHub Actions.
-
-This would allow fully automated CI/CD without manual intervention.
-
----
-
-### 14.5 Blue/Green Deployment Strategy
-
-Implement zero-downtime deployment using:
-
-- Multiple EC2 instances.
-- Load balancer traffic switching.
-
----
-
-### 14.6 Infrastructure Scalability
-
-Replace single EC2 deployment with:
-
-- Auto Scaling Group.
-- Launch Templates.
-- Immutable infrastructure strategy.
-
----
-
-### 14.7 Monitoring and Logging
-
-Integrate:
-
-- Amazon CloudWatch for logs and metrics.
-- Health checks and alerts.
-
-This would provide better operational visibility.
-```
 
 ---
