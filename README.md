@@ -1,4 +1,6 @@
-# Automated Strapi Deployment using GitHub Actions and Terraform on AWS
+# 1. Task Title
+
+**Automated Strapi Deployment using GitHub Actions and Terraform on AWS**
 
 ---
 
@@ -72,19 +74,18 @@ Used to assign an IAM instance profile to EC2, allowing secure access to ECR wit
 
 ### Ubuntu 22.04 (EC2)
 Base operating system for the EC2 instance.
-
 ---
 
-# 5. Repository Structure
+Here is the exact content formatted for your GitHub README.
 
 ```markdown
 ## 5. Repository Structure
 
 The repository is organized to clearly separate application code, infrastructure code, and CI/CD workflows.
 
-```
 
 ```
+
 pearlthoughts-internship/
 │
 ├── .github/
@@ -110,6 +111,7 @@ pearlthoughts-internship/
 │           └── security-group/
 │
 └── README.md
+
 ```
 
 ### Folder Responsibilities
@@ -138,13 +140,12 @@ pearlthoughts-internship/
 
 This structure ensures separation of concerns between application code, infrastructure code, and automation workflows.
 
+```
+
 ````
 
 ---
 
-# 6. Infrastructure Design (Terraform Architecture)
-
-```markdown
 ## 6. Infrastructure Design
 
 The infrastructure is provisioned using Terraform following a modular and production-oriented design.
@@ -219,14 +220,9 @@ Advantages:
 - Clear traceability between source code and deployed version.
 - No ambiguity in image versions.
 - Supports rollback if necessary.
-````
 
 ---
-Good. Now I will give **Section 7 – CI Workflow (Line-by-Line Explanation)** in a professional and technical style.
 
-This assumes your `ci.yml` is the final working version using `amazon-ecr-login` and commit SHA tagging.
-
----
 
 ```markdown
 ## 7. Continuous Integration (CI) Workflow
@@ -240,7 +236,19 @@ Its responsibility is to automatically build and push the Docker image of the St
 
 ---
 
-## 7.1 Workflow Trigger
+
+```
+## 7. Continuous Integration (CI) Workflow
+
+The CI workflow is defined in:
+
+`.github/workflows/ci.yml`
+
+Its responsibility is to automatically build and push the Docker image of the Strapi application to Amazon ECR whenever code is pushed to the main branch.
+
+---
+
+### 7.1 Workflow Trigger
 
 ```yaml
 name: CI - Build & Push Strapi Image
@@ -249,6 +257,7 @@ on:
   push:
     branches:
       - main
+
 ```
 
 **Explanation:**
@@ -261,12 +270,13 @@ This enforces a controlled CI process tied to the production branch.
 
 ---
 
-## 7.2 Global Environment Variables
+### 7.2 Global Environment Variables
 
 ```yaml
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: strapi-devops
+
 ```
 
 **Explanation:**
@@ -278,12 +288,13 @@ Using global environment variables improves readability and prevents hardcoding 
 
 ---
 
-## 7.3 Job Definition
+### 7.3 Job Definition
 
 ```yaml
 jobs:
   build:
     runs-on: ubuntu-latest
+
 ```
 
 **Explanation:**
@@ -296,11 +307,12 @@ The entire CI pipeline runs inside a temporary Ubuntu environment.
 
 ---
 
-## 7.4 Exporting Image Tag as Output
+### 7.4 Exporting Image Tag as Output
 
 ```yaml
     outputs:
       image_tag: ${{ steps.vars.outputs.tag }}
+
 ```
 
 **Explanation:**
@@ -313,11 +325,12 @@ The image tag represents the Git commit SHA.
 
 ---
 
-## 7.5 Checkout Repository Code
+### 7.5 Checkout Repository Code
 
 ```yaml
       - name: Checkout Code
         uses: actions/checkout@v4
+
 ```
 
 **Explanation:**
@@ -329,12 +342,13 @@ Without this step, Docker cannot access the application source.
 
 ---
 
-## 7.6 Generate Docker Image Tag
+### 7.6 Generate Docker Image Tag
 
 ```yaml
       - name: Set Image Tag
         id: vars
         run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
 ```
 
 **Explanation:**
@@ -348,7 +362,7 @@ This ensures each Docker image version is uniquely traceable to a commit.
 
 ---
 
-## 7.7 Configure AWS Credentials
+### 7.7 Configure AWS Credentials
 
 ```yaml
       - name: Configure AWS Credentials
@@ -357,6 +371,7 @@ This ensures each Docker image version is uniquely traceable to a commit.
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
 ```
 
 **Explanation:**
@@ -370,12 +385,13 @@ This avoids hardcoding credentials in the repository.
 
 ---
 
-## 7.8 Login to Amazon ECR
+### 7.8 Login to Amazon ECR
 
 ```yaml
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
 ```
 
 **Explanation:**
@@ -389,7 +405,7 @@ This step enables Docker push operations to ECR.
 
 ---
 
-## 7.9 Build and Push Docker Image
+### 7.9 Build and Push Docker Image
 
 ```yaml
       - name: Build and Push Docker Image
@@ -398,30 +414,33 @@ This step enables Docker push operations to ECR.
 
           docker build -t $IMAGE_URI ./day-04-terraform-strapi-docker/strapi-app
           docker push $IMAGE_URI
+
 ```
 
 **Explanation:**
 
 1. Construct full image URI:
+```
+<account-id>.dkr.ecr.<region>[.amazonaws.com/strapi-devops](https://.amazonaws.com/strapi-devops):<commit-sha>
 
-   ```
-   <account-id>.dkr.ecr.<region>.amazonaws.com/strapi-devops:<commit-sha>
-   ```
+```
+
 
 2. `docker build`
+* Builds image from the `strapi-app` directory.
+* Tags it with commit SHA.
 
-   * Builds image from the `strapi-app` directory.
-   * Tags it with commit SHA.
 
 3. `docker push`
+* Pushes image to private ECR repository.
 
-   * Pushes image to private ECR repository.
+
 
 This completes the CI process.
 
 ---
 
-## 7.10 CI Workflow Summary
+### 7.10 CI Workflow Summary
 
 The CI workflow performs the following:
 
@@ -443,30 +462,23 @@ This ensures:
 ```
 
 ---
-Good. Below is **Section 8 – Continuous Deployment (CD) Workflow (Line-by-Line Explanation)** written in the same professional style.
 
-You can paste this directly into your README.
-
----
-
-
-```markdown
+```
 ## 8. Continuous Deployment (CD) Workflow
 
 The CD workflow is defined in:
 
-.github/workflows/terraform.yml
+`.github/workflows/terraform.yml`
 
 Its responsibility is to deploy a selected Docker image version to the EC2 instance using Terraform.
 
 Unlike CI, this workflow is manually triggered to ensure controlled production deployments.
-```
 
 ---
 
-## 8.1 Workflow Trigger (Manual Deployment)
+### 8.1 Workflow Trigger (Manual Deployment)
 
-```yaml
+```
 name: CD - Deploy with Terraform
 
 on:
@@ -475,6 +487,7 @@ on:
       image_tag:
         description: "Docker image tag to deploy"
         required: true
+
 ```
 
 **Explanation:**
@@ -488,11 +501,12 @@ This provides version-controlled and approval-based deployment.
 
 ---
 
-## 8.2 Global Environment Variables
+### 8.2 Global Environment Variables
 
 ```yaml
 env:
   AWS_REGION: us-east-1
+
 ```
 
 **Explanation:**
@@ -502,12 +516,13 @@ env:
 
 ---
 
-## 8.3 Job Definition
+### 8.3 Job Definition
 
 ```yaml
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
 ```
 
 **Explanation:**
@@ -518,11 +533,12 @@ jobs:
 
 ---
 
-## 8.4 Checkout Repository Code
+### 8.4 Checkout Repository Code
 
 ```yaml
       - name: Checkout Code
         uses: actions/checkout@v4
+
 ```
 
 **Explanation:**
@@ -532,7 +548,7 @@ jobs:
 
 ---
 
-## 8.5 Configure AWS Credentials
+### 8.5 Configure AWS Credentials
 
 ```yaml
       - name: Configure AWS Credentials
@@ -541,6 +557,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
 ```
 
 **Explanation:**
@@ -553,11 +570,12 @@ This avoids exposing credentials in code.
 
 ---
 
-## 8.6 Setup Terraform
+### 8.6 Setup Terraform
 
 ```yaml
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
 ```
 
 **Explanation:**
@@ -567,12 +585,13 @@ This avoids exposing credentials in code.
 
 ---
 
-## 8.7 Terraform Initialization
+### 8.7 Terraform Initialization
 
 ```yaml
       - name: Terraform Init
         working-directory: day-04-terraform-strapi-docker/terraform-day5
         run: terraform init
+
 ```
 
 **Explanation:**
@@ -586,7 +605,7 @@ This ensures Terraform operates on existing infrastructure rather than creating 
 
 ---
 
-## 8.8 Terraform Plan
+### 8.8 Terraform Plan
 
 ```yaml
       - name: Terraform Plan
@@ -596,15 +615,17 @@ This ensures Terraform operates on existing infrastructure rather than creating 
           -var="project_name=strapi-devops" \
           -var="image_tag=${{ github.event.inputs.image_tag }}" \
           -var="key_name=Akash-PT"
+
 ```
 
 **Explanation:**
 
 * Executes Terraform plan with variables:
+* `project_name`
+* `image_tag` (from manual input)
+* `key_name`
 
-  * `project_name`
-  * `image_tag` (from manual input)
-  * `key_name`
+
 * Compares current infrastructure state with desired configuration.
 * Detects changes such as updated Docker image tag.
 
@@ -612,7 +633,7 @@ This step previews infrastructure changes before applying them.
 
 ---
 
-## 8.9 Terraform Apply
+### 8.9 Terraform Apply
 
 ```yaml
       - name: Terraform Apply
@@ -622,6 +643,7 @@ This step previews infrastructure changes before applying them.
           -var="project_name=strapi-devops" \
           -var="image_tag=${{ github.event.inputs.image_tag }}" \
           -var="key_name=Akash-PT"
+
 ```
 
 **Explanation:**
@@ -641,7 +663,7 @@ When `image_tag` changes:
 
 ---
 
-## 8.10 CD Workflow Summary
+### 8.10 CD Workflow Summary
 
 The CD workflow performs the following:
 
@@ -661,7 +683,6 @@ This approach ensures:
 * Full traceability between Git commit and running application version.
 
 ```
-
 ---
 
 # 9. Deployment Workflow (End-to-End Execution Process)
