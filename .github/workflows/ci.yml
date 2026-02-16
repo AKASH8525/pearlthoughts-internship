@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: strapi-devops
@@ -31,23 +32,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
         run: |
-          aws ecr get-login-password --region $AWS_REGION \
-          | docker login --username AWS --password-stdin \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.tag }}
 
-      - name: Build Docker Image
-        run: |
-          docker build -t $ECR_REPOSITORY:${{ steps.vars.outputs.tag }} ./day-04-terraform-strapi-docker/strapi-app
+          echo "Building image: $IMAGE_URI"
 
-      - name: Tag Docker Image
-        run: |
-          docker tag $ECR_REPOSITORY:${{ steps.vars.outputs.tag }} \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:${{ steps.vars.outputs.tag }}
-
-
-      - name: Push Docker Image
-        run: |
-          docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:${{ steps.vars.outputs.tag }}
-
+          docker build -t $IMAGE_URI ./day-04-terraform-strapi-docker/strapi-app
+          docker push $IMAGE_URI
