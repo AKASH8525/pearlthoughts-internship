@@ -76,9 +76,8 @@ Used to assign an IAM instance profile to EC2, allowing secure access to ECR wit
 Base operating system for the EC2 instance.
 ---
 
-Here is the exact content formatted for your GitHub README.
 
-```markdown
+```
 ## 5. Repository Structure
 
 The repository is organized to clearly separate application code, infrastructure code, and CI/CD workflows.
@@ -141,8 +140,6 @@ pearlthoughts-internship/
 This structure ensures separation of concerns between application code, infrastructure code, and automation workflows.
 
 ```
-
-````
 
 ---
 
